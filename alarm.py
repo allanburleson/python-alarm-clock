@@ -17,11 +17,11 @@ def get_alarms_location():
             return f.read().strip('\n')
     except FileNotFoundError:
         with config_path.open('w') as f:
-            f.write(default)
+            f.write(str(default))
         return default
 
 def main():
-    os.chdir(get_alarms_location())
+    os.chdir(str(get_alarms_location()))
     sounds = os.listdir()
     sound = random.choice(sounds)
     pygame.init()
@@ -33,3 +33,6 @@ def main():
     button.wait_for_press()
     pygame.mixer.music.pause()
     return
+
+if __name__ == '__main__':
+    main()
