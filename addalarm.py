@@ -3,6 +3,7 @@ import argparse
 import os
 from pathlib import Path
 import subprocess
+import sys
 
 def get_alarm_location():
     config_path = Path('~/.alarm-location').expanduser()
@@ -33,8 +34,6 @@ def gen_line(args):
     # Make a copy of args without day_range
     a = args.copy()
     a.pop('day_range')
-    if len(set(a.values())) == 1:
-        print('Warning: Because no arguments were given, alarm will trigger every minute.')
     return ' '.join(a.values()) + ' ' + get_alarm_location() 
 
 def convert_args(args):
@@ -70,6 +69,9 @@ def main():
     if not start in crontab:
         crontab.append(start)
     args = vars(parser.parse_args())
+    if set(args.values()) == {None}:
+        parser.parse_args(['-h'])
+        sys.exit()
     if args['day_range'] is not None:
         lines = create_alarms_for_range(args)
         write(crontab, lines, file_path)
