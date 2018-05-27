@@ -1,4 +1,4 @@
-#!/usr/bin/env python3.5
+#!/usr/bin/env python3.6
 import argparse
 import os
 from pathlib import Path
@@ -46,10 +46,8 @@ def convert_args(args):
 
 def write(crontab, lines, file_path):
     file_path.write_text(crontab + '\n'.join(lines) + '\n')
-    #with file_path.open('w') as f:
-        #f.write(crontab + '\n'.join(lines) + '\n')
-    assert subprocess.run(['crontab', file_path]).returncode == 0
-    os.remove(file_path)
+    assert subprocess.run(['crontab', str(file_path)]).returncode == 0
+    os.remove(str(file_path))
 
 def get_crontab():
     crontab = subprocess.run(['crontab', '-l'], stdout=subprocess.PIPE).stdout

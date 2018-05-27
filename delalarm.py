@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+#!/usr/bin/env python3.6
 import argparse
 import os
 from pathlib import Path
@@ -41,8 +41,8 @@ def main():
         final = '\n'.join(crontab) + '\n' 
     with file_path.open('w') as f:
         f.write(final)
-    subprocess.run(['crontab', file_path])
-    os.remove(file_path)
+    subprocess.run(['crontab', str(file_path)])
+    os.remove(str(file_path))
 
 if __name__ == '__main__':
     main()
