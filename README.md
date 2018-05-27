@@ -8,6 +8,6 @@ This creates alarms by automatically scheduling cron jobs that run an alarm scri
 - cron
 
 ### Python
-3.4 or greater
-gpiozero
+- 3.4 or greater
+- gpiozero
 
