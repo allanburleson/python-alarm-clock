@@ -3,13 +3,17 @@
 from pathlib import Path
 import os
 import random
-#import subprocess
+import subprocess
 import sys
 
 from gpiozero import Button
 import pygame
 
 def get_alarms_location():
+    '''
+    Returns the location of the alarms directory as
+    defined in ~/.alarms-location. Default is ~/alarms.
+    '''
     config_path = Path('~/.alarms-location').expanduser()
     default = Path('~/alarms').expanduser()
     try:
@@ -20,7 +24,12 @@ def get_alarms_location():
             f.write(str(default))
         return default
 
+def set_volume(percent):
+    ''' Set the system volume. This may be different on different systems. '''
+    subprocess.run(['amixer', 'set', 'PCM', '--', str(percent) + '%'])
+
 def main():
+    set_volume(95)
     os.chdir(str(get_alarms_location()))
     sounds = os.listdir()
     sound = random.choice(sounds)
@@ -32,7 +41,6 @@ def main():
     #resp = ps.stdout.decode('ascii').strip()
     button.wait_for_press()
     pygame.mixer.music.pause()
-    return
 
 if __name__ == '__main__':
     main()
