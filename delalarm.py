@@ -1,8 +1,9 @@
-#!/usr/bin/env python3.6
+#!/usr/bin/env python3.7
 import argparse
 import os
 from pathlib import Path
 import subprocess
+import sys
 
 from addalarm import get_crontab
 
@@ -33,7 +34,10 @@ def main():
         for i, line in enumerate(alarms):
             if line.strip() != '':
                 print(str(i) + ':', line)
-        n = int(get_num('Alarm to delete'))
+        try:
+            n = int(get_num('Alarm to delete'))
+        except KeyboardInterrupt:
+            sys.exit()
         alarms.pop(n)
         crontab += alarms
         final = '\n'.join(crontab)

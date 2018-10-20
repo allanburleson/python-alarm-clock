@@ -1,4 +1,4 @@
-#!/usr/bin/env python3.6
+#!/usr/bin/env python3.7
 import argparse
 import os
 from pathlib import Path
@@ -13,7 +13,7 @@ def get_alarm_location():
             return f.read().strip('\n')
     except FileNotFoundError:
         with config_path.open('w') as f:
-            f.write(default)
+            f.write(str(default))
         return default
 
 def create_alarms_for_range(args):
@@ -34,7 +34,7 @@ def gen_line(args):
     # Make a copy of args without day_range
     a = args.copy()
     a.pop('day_range')
-    return ' '.join(a.values()) + ' ' + get_alarm_location() 
+    return ' '.join(a.values()) + ' ' + str(get_alarm_location())
 
 def convert_args(args):
     for k, v in args.items():
@@ -67,7 +67,7 @@ def main():
     file_path = Path('~/.tmpcron').expanduser()
     crontab = get_crontab()
     if not start in crontab:
-        crontab.append(start)
+        crontab += start
     args = vars(parser.parse_args())
     if set(args.values()) == {None}:
         parser.parse_args(['-h'])
