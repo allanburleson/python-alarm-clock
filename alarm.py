@@ -3,7 +3,7 @@
 from pathlib import Path
 from math import inf
 import os
-import random
+from random import SystemRandom
 import signal
 import subprocess
 import sys
@@ -35,6 +35,7 @@ def set_volume(percent):
 
 def play_sound():
     try:
+        random = SystemRandom()
         sounds = os.listdir()
         sound = random.choice(sounds)
         pygame.init()
@@ -48,14 +49,17 @@ def play_sound():
     except:
         play_sound()
 
-
+def snooze(seconds):
+    pygame.mixer.music.pause()
+    time.sleep(seconds)
+    main()
 
 def main():
     global x
     set_volume(77)
     os.chdir(str(get_alarms_location()))
     play_sound()
-    b = Button(21)
+    '''b = Button(21)
     t = inf
     def incrx():
         global x
@@ -76,7 +80,21 @@ def main():
         time.sleep(5 * 60)
         main()
     else:
-        print('pressed, turning off')
+        print('pressed, turning off')'''
+    # turn display on
+    ps = subprocess.Popen(['echo', 'on 0'], stdout=subprocess.PIPE)
+    subprocess.run(['cec-client', '-s', '-d', '1'], stdin=ps.stdout)
+    ps = subprocess.run(['zenity', '--question', '--title', 'Alarm',
+        '--ok-label', 'Stop', '--cancel-label', 'Snooze', '--text',
+        'Good morning!'], stdout=subprocess.PIPE)
+    resp = ps.returncode
+    if int(resp):
+        print('Snoozing')
+        snooze(5 * 60)
+    pygame.mixer.music.pause()
+    # turn display off
+    ps = subprocess.Popen(['echo', 'standby 0'], stdout=subprocess.PIPE)
+    subprocess.run(['cec-client', '-s', '-d', '1'], stdin=ps.stdout)
 
 if __name__ == '__main__':
     main()
