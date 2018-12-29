@@ -34,7 +34,7 @@ def gen_line(args):
     # Make a copy of args without day_range
     a = args.copy()
     a.pop('day_range')
-    return ' '.join(a.values()) + ' ' + str(get_alarm_location())
+    return ' '.join(a.values()) + ' ' + 'DISPLAY=:0 ' + str(get_alarm_location())
 
 def convert_args(args):
     for k, v in args.items():
