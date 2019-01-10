@@ -33,20 +33,23 @@ def set_volume(percent):
     ''' Set the system volume. This may be different on different systems. '''
     subprocess.run(['amixer', 'set', 'PCM', '--', str(percent) + '%'])
 
+def get_sound():
+    random = SystemRandom()
+    sound = random.choice(os.listdir())
+    while os.path.isdir(sound):
+        os.chdir(sound)
+        sound = random.choice(os.listdir())
+    return sound 
+
 def play_sound():
     try:
-        random = SystemRandom()
-        sounds = os.listdir()
-        sound = random.choice(sounds)
         pygame.init()
-        item = random.choice(os.listdir())
-        while os.path.isdir(item):
-            os.chdir(item)
-            item = random.choice(os.listdir())
-        pygame.init()
+        sound = get_sound()
+        print('Playing ' + sound)
         pygame.mixer.music.load(sound)
         pygame.mixer.music.play(-1)
-    except:
+    except pygame.error:
+        print('Playing ' + sound + ' failed. Trying again.')
         play_sound()
 
 def snooze(seconds):
