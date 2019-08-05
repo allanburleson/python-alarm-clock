@@ -6,9 +6,13 @@ from random import SystemRandom
 import subprocess
 import time
 
+import gi
+gi.require_version('Gtk', '3.0')
+from gi.repository import Gtk
 import pygame
 
-VOLUME_LEVEL_PERCENT = .2
+VOLUME_LEVEL_PERCENT = .40
+SNOOZE_TIME = 5 * 60
 
 
 def get_alarms_location():
@@ -28,16 +32,16 @@ def get_alarms_location():
 
 
 def set_volume(percent):
-    """ Set the system volume. This may be different on different systems. """
+    """ Set the system volume. This will unfortunately be different on different systems. """
     subprocess.run(["amixer", "set", "Master", "--", str(percent * 100) + "%"])
 
 
 def get_sound():
     random = SystemRandom()
-    sound = random.choice(os.listdir())
+    sound = random.choice(os.listdir('.'))
     while os.path.isdir(sound):
         os.chdir(sound)
-        sound = random.choice(os.listdir())
+        sound = random.choice(os.listdir('.'))
     return sound 
 
 
@@ -47,7 +51,7 @@ def play_sound():
     print("Playing " + sound)
     try:
         pygame.mixer.music.load(sound)
-        pygame.mixer.music.play()
+        pygame.mixer.music.play(-1)
     except pygame.error:
         print("Playing " + sound + " failed. Trying again.")
         play_sound()
@@ -59,27 +63,26 @@ def snooze(seconds):
     main()
 
 
+def show_dialog() -> bool:
+    dialog = Gtk.MessageDialog(secondary_text="Good morning, I suppose.")
+    dialog.set_title("Alarm")
+    dialog.set_icon_name("audio-volume-high")
+    dialog.add_button("Snooze", 1)
+    dialog.add_button("Stop", 0)
+    out = dialog.run()
+    dialog.destroy()
+    return bool(out)
+
+
 def main():
     set_volume(VOLUME_LEVEL_PERCENT)
     os.chdir(str(get_alarms_location()))
     play_sound()
-    while pygame.mixer.music.get_busy():
-        pass
-    return
-    """# turn display on
-    ps = subprocess.Popen(["echo", "on 0"], stdout=subprocess.PIPE)
-    subprocess.run(["cec-client", "-s", "-d", "1"], stdin=ps.stdout)
-    ps = subprocess.run(["zenity", "--question", "--title", "Alarm",
-        "--ok-label", "Stop", "--cancel-label", "Snooze", "--text",
-        "Good morning!"], stdout=subprocess.PIPE)
-    resp = ps.returncode
-    if int(resp):
+    out = show_dialog()
+    if out:
         print("Snoozing")
-        snooze(5 * 60)
+        snooze(SNOOZE_TIME)
     pygame.mixer.music.pause()
-    # turn display off
-    ps = subprocess.Popen(["echo", "standby 0"], stdout=subprocess.PIPE)
-    subprocess.run(["cec-client", "-s", "-d", "1"], stdin=ps.stdout)"""
 
 
 if __name__ == "__main__":
