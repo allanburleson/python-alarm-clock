@@ -11,7 +11,7 @@ gi.require_version('Gtk', '3.0')
 from gi.repository import Gtk
 import pygame
 
-VOLUME_LEVEL_PERCENT = .40
+VOLUME_LEVEL_PERCENT = .50
 SNOOZE_TIME = 5 * 60
 
 

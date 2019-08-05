@@ -7,11 +7,13 @@ import sys
 
 from addalarm import get_crontab
 
+
 def get_num(kind):
     r = ''
     while not r.isnumeric():
         r = input(kind + ': ')
     return r
+
 
 def main():
     parser = argparse.ArgumentParser(description='Delete a scheduled alarm.')
@@ -25,7 +27,7 @@ def main():
         if line == start:
             r = range(i + 1, len(crontab))
             alarms = [crontab[j] for j in r]
-            for j in r:
+            for _ in r:
                 crontab.pop(len(crontab) - 1)
     if alarms is None or len([a for a in alarms if a.strip() != '']) == 0:
         print('There are no alarms!')
@@ -47,6 +49,7 @@ def main():
         f.write(final)
     subprocess.run(['crontab', str(file_path)])
     os.remove(str(file_path))
+
 
 if __name__ == '__main__':
     main()
