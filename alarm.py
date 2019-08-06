@@ -4,6 +4,7 @@ import os
 from pathlib import Path
 from random import SystemRandom
 import subprocess
+import sys
 import time
 
 import gi
@@ -11,7 +12,7 @@ gi.require_version('Gtk', '3.0')
 from gi.repository import Gtk
 import pygame
 
-VOLUME_LEVEL_PERCENT = .50
+VOLUME_LEVEL_PERCENT = .42
 SNOOZE_TIME = 5 * 60
 
 
@@ -50,11 +51,15 @@ def play_sound():
     sound = get_sound()
     print("Playing " + sound)
     try:
-        pygame.mixer.music.load(sound)
-        pygame.mixer.music.play(-1)
-    except pygame.error:
-        print("Playing " + sound + " failed. Trying again.")
-        play_sound()
+        try:
+            pygame.mixer.music.load(sound)
+            pygame.mixer.music.play(-1)
+        except pygame.error:
+            print("Playing " + sound + " failed. Trying again.")
+            play_sound()
+    except RecursionError:
+        print(f"Failed to find playable file. The directory for alarms is {get_alarms_location()}.")
+        sys.exit(2)
 
 
 def snooze(seconds):
