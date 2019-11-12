@@ -6,14 +6,19 @@ from random import SystemRandom
 import subprocess
 import sys
 import time
+from urllib.request import pathname2url
 
 import gi
 gi.require_version('Gtk', '3.0')
 from gi.repository import Gtk
-import pygame
+gi.require_version('Gst', '1.0')
+from gi.repository import Gst
 
 VOLUME_LEVEL_PERCENT = .42
 SNOOZE_TIME = 5 * 60
+
+Gst.init()
+playbin = Gst.ElementFactory.make("playbin", "playbin")
 
 
 def get_alarms_location():
@@ -47,15 +52,13 @@ def get_sound():
 
 
 def play_sound():
-    pygame.init()
     sound = get_sound()
     print("Playing " + sound)
     try:
-        try:
-            pygame.mixer.music.load(sound)
-            pygame.mixer.music.play(-1)
-        except pygame.error:
-            print("Playing " + sound + " failed. Trying again.")
+        playbin.props.uri = "file://" + pathname2url(os.path.abspath(sound))
+        result = playbin.set_state(Gst.State.PLAYING)
+        if result != Gst.StateChangeReturn.ASYNC:
+            print(f"Error: {result}. Trying again.")
             play_sound()
     except RecursionError:
         print(f"Failed to find playable file. The directory for alarms is {get_alarms_location()}.")
@@ -63,7 +66,7 @@ def play_sound():
 
 
 def snooze(seconds):
-    pygame.mixer.music.pause()
+    playbin.set_state(Gst.State.NULL)
     time.sleep(seconds)
     main()
 
@@ -87,7 +90,6 @@ def main():
     if out:
         print("Snoozing")
         snooze(SNOOZE_TIME)
-    pygame.mixer.music.pause()
 
 
 if __name__ == "__main__":
