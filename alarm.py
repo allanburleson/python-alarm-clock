@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+#!/usr/bin/python3
 
 import os
 from pathlib import Path
@@ -14,7 +14,7 @@ from gi.repository import Gtk
 gi.require_version('Gst', '1.0')
 from gi.repository import Gst
 
-VOLUME_LEVEL_PERCENT = .42
+VOLUME_LEVEL_PERCENT = .6
 SNOOZE_TIME = 5 * 60
 
 Gst.init()
@@ -39,15 +39,18 @@ def get_alarms_location():
 
 def set_volume(percent):
     """ Set the system volume. This will unfortunately be different on different systems. """
-    subprocess.run(["amixer", "set", "Master", "--", str(percent * 100) + "%"])
+    subprocess.run(["pactl", "set-sink-mute", "0", "0"])
+    subprocess.run(["pactl", "set-sink-volume", "0", str(int(percent * 100)) + "%"])
 
 
 def get_sound():
     random = SystemRandom()
-    sound = random.choice(os.listdir('.'))
+    files = os.listdir('.')
+    sound = random.choice(files)
     while os.path.isdir(sound):
         os.chdir(sound)
-        sound = random.choice(os.listdir('.'))
+        files = os.listdir('.')
+        sound = random.choice(files)
     return sound 
 
 
@@ -72,7 +75,7 @@ def snooze(seconds):
 
 
 def show_dialog() -> bool:
-    dialog = Gtk.MessageDialog(secondary_text="Good morning, I suppose.")
+    dialog = Gtk.MessageDialog(secondary_text="Good morning.")
     dialog.set_title("Alarm")
     dialog.set_icon_name("audio-volume-high")
     dialog.add_button("Stop", 0)
