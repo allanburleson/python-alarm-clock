@@ -1,91 +1,61 @@
 #!/usr/bin/env python3
 import argparse
+import json
 import os
-from pathlib import Path
-import subprocess
 import sys
 
-
-def get_alarm_location():
-    config_path = Path('~/.alarm-location').expanduser()
-    default = Path('~/bin/alarm.py').expanduser()
-    try:
-        with config_path.open() as f:
-            return f.read().strip('\n')
-    except FileNotFoundError:
-        with config_path.open('w') as f:
-            f.write(str(default))
-        return default
+TIMES_LOCATION = os.path.expanduser("~/.alarm-times.json")
 
 
-def create_alarms_for_range(args):
-    days = args['day_range'].split('-')
-    assert len(days) == 2, 'Must use range of two days'
-    assert ''.join(days).isdecimal(), 'Days must be numbers'
-    days[0], days[1] = int(days[0]), int(days[1])
-    for day in days:
-        assert 0 <= day <= 7, 'Days must be at least 0 and no greater than 7'
-    convert_args(args)
-    lines = []
-    for i in range(days[0], days[1] + 1):  # Make a line for each day in the day range
-        args['day_of_week'] = str(i)
-        lines.append(gen_line(args))
-    return lines
-
-
-def gen_line(args):
-    # Make a copy of args without day_range
-    a = args.copy()
-    a.pop('day_range')
-    return ' '.join(a.values()) + ' ' + 'DISPLAY=:0 ' + str(get_alarm_location())
-
-
-def convert_args(args):
-    for k, v in args.items():
+def fix_args(args):
+    if not args["minute"]:
+        args["minute"] = 0
+    for k, v in args.copy().items():
         if v is None:
-            args[k] = '*'
-        else:
-            args[k] = str(v)
+            del args[k]
 
 
-def write(crontab, lines, file_path):
-    file_path.write_text(crontab + '\n'.join(lines) + '\n')
-    assert subprocess.run(['crontab', str(file_path)]).returncode == 0
-    os.remove(str(file_path))
+def check_args(args):
+    assert (args["day"] is not None) or args["day_range"] is not None, \
+        "At least one of day and day range must be given"
+    assert args["hour"] is not None, "Hour must be given"
+    if args["day_range"] is not None:
+        assert len(args["day_range"]) == 3 and ''.join(args["day_range"].split("-")).isdigit() \
+               and args["day_range"][1] == "-", "Range is formatted incorrectly"
 
 
-def get_crontab():
-    crontab = subprocess.run(['crontab', '-l'], stdout=subprocess.PIPE).stdout
-    return crontab.decode('ascii')
+def write(args, file_path):
+    print(args)
+    if not os.path.exists(file_path):
+        with open(file_path, "w") as f:
+            json.dump([args], f)
+    else:
+        with open(file_path, "r+") as f:
+            j = json.load(f)
+            # Overwrite beginning of file
+            f.seek(0)
+            j.append(args)
+            json.dump(j, f)
+            # Erase old leftover data
+            f.truncate()
 
 
 def main():
     parser = argparse.ArgumentParser(
-            description='Add an alarm. Blank fields default to "*".')
-    parser.add_argument('-m', '--minutes', type=int)
-    parser.add_argument('-r', '--hours', type=int, help='Uses 24-hour time.')
-    parser.add_argument('--day-of-month', type=int)
-    parser.add_argument('-n', '--month', type=int)
-    parser.add_argument('-d', '--day-of-week', type=int,
-                        help='Weekday as a number. Sunday = 0.')
+        description='Add an alarm.')
+    parser.add_argument('-m', '--minute', type=int, help='If left blank defaults to 0.')
+    parser.add_argument('-r', '--hour', type=int, help='Uses 24-hour time.')
+    parser.add_argument('-d', '--day', type=int,
+                        help='Weekday as a number. Monday is 0.')
     parser.add_argument('-g', '--day-range', type=str,
                         help='Enter start and end days, separated by a hyphen.')
-    start = '# Alarms\n'
-    file_path = Path('~/.tmpcron').expanduser()
-    crontab = get_crontab()
-    if start not in crontab:
-        crontab += start
     args = vars(parser.parse_args())
     if set(args.values()) == {None}:
         parser.parse_args(['-h'])
         sys.exit()
-    if args['day_range'] is not None:
-        lines = create_alarms_for_range(args)
-        write(crontab, lines, file_path)
-    else:
-        convert_args(args)
-        line = gen_line(args)    
-        write(crontab, [line], file_path)
+    check_args(args)
+    fix_args(args)
+    write(args, TIMES_LOCATION)
 
 
 if __name__ == '__main__':

@@ -65,13 +65,13 @@ def play_sound():
             play_sound()
     except RecursionError:
         print(f"Failed to find playable file. The directory for alarms is {get_alarms_location()}.")
-        sys.exit(2)
+        return 2
 
 
 def snooze(seconds):
     playbin.set_state(Gst.State.NULL)
     time.sleep(seconds)
-    main()
+    run()
 
 
 def show_dialog() -> bool:
@@ -82,17 +82,26 @@ def show_dialog() -> bool:
     dialog.add_button("Snooze", 1)
     out = dialog.run()
     dialog.destroy()
+    #Gtk.main_quit()
+    playbin.set_state(Gst.State.NULL)
     return bool(out)
 
 
-def main():
+def run():
     set_volume(VOLUME_LEVEL_PERCENT)
     os.chdir(str(get_alarms_location()))
-    play_sound()
+    out = play_sound()
+    if out is not None:
+        return out
     out = show_dialog()
     if out:
         print("Snoozing")
         snooze(SNOOZE_TIME)
+
+
+def main():
+    out = run()
+    sys.exit(out)
 
 
 if __name__ == "__main__":
